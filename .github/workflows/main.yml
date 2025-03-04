@@ -1,39 +1,31 @@
-name: condition-tests
+name: Skipped Job Test
+
 on:
-push:
-branches: [ master ]
-
-
+  workflow_dispatch:
+  
 jobs:
-test:
-runs-on: ubuntu-latest
+  Skipped-Job:
+    name: skipped job
+    runs-on: [self-hosted]
+    if: 1 != 1
+    steps:
+    - name: write to console 1
+      run: Write-Host "I should be skipped"
 
-
-steps:
-- name: test1
-  run: echo hoge
-  if: ( 'a' == 'a' )
-
-- name: test2
-  run: echo hoge
-  if: ( 'a' == 'b' )
-
-- name: test3
-  run: echo hoge
-  if: &gt;
-    'a' == 'a'
-
-- name: test4
-  run: echo hoge
-  if: &gt;
-    'a' == 'b'
-
-- name: test5
-  run: echo hoge
-  if: &gt;
-    ${{ 'a' == 'a' }}
-
-- name: test6
-  run: echo hoge
-  if: &gt;
-    ${{ 'a' == 'b' }}
+  Needs-Job:
+    name: needs conditional job
+    needs: Skipped-Job
+    if: always() && needs.Skipped-Job.result != 'failed' # this should run eventhough needs the skipped-job
+    runs-on: [self-hosted]
+    steps:
+      - name: write to console 2
+        run: Write-Host "Needs-Job completed"
+  
+  Next:
+    name: Next job
+    needs: Needs-Job
+    # if: always() && needs.Needs-Job.result == 'success' # uncommenting this condition causes the job to not be skipped
+    runs-on: [self-hosted]
+    steps:
+      - name: write to console 3
+        run: Write-Host "I should print whenever Needs-Job succeeds"
